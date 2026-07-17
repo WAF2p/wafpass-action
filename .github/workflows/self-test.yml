@@ -16,6 +16,10 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install lint dependencies
+        run: |
+          python3 -m pip install pyyaml
+
       - name: Check action.yml syntax
         run: |
           python3 -c "import yaml; yaml.safe_load(open('action.yml'))"
@@ -31,11 +35,23 @@ jobs:
         with:
           path: action
 
-      - name: Checkout WAF++ PASS for controls and fixtures
+      - name: Checkout WAF++ PASS
         uses: actions/checkout@v4
         with:
           repository: WAF2p/pass
           path: pass
+
+      - name: Checkout WAF++ framework controls
+        uses: actions/checkout@v4
+        with:
+          repository: WAF2p/framework
+          path: framework
+
+      - name: Prepare controls
+        run: |
+          mkdir -p pass/controls
+          cp framework/modules/controls/controls/*.yml pass/controls/ || true
+          ls -la pass/controls/ | head -5
 
       - name: Start mock WAF++ server
         run: |
