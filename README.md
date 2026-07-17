@@ -127,6 +127,10 @@ published yet, install from the source repository instead:
           upload_source: true
 ```
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-Apache-2.0
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).

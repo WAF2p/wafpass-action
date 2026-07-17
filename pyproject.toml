@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wafpass-action"
+version = "0.1.0"
+description = "WAF++ PASS – GitHub Action for running IaC compliance scans and pushing results to a WAF++ server"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Artem Lajko" },
+    { name = "Sascha Lewandowski" },
+    { name = "Sebastian Meyer" },
+    { name = "Tim Urlaub" },
+]
+keywords = [
+    "waf++", "github-action", "iac", "terraform", "compliance", "security", "cloud",
+    "devsecops", "static-analysis", "governance", "multi-cloud",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "httpx>=0.27",
+]
+
+[project.urls]
+Homepage = "https://waf2p.dev"
+Documentation = "https://waf2p.dev/docs/"
+Repository = "https://github.com/WAF2p/wafpass-action"
+"Bug Tracker" = "https://github.com/WAF2p/wafpass-action/issues"
+Community = "https://github.com/WAF2p"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pyyaml>=6.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
