@@ -1,0 +1,119 @@
+name: 'WAF++ PASS Scan'
+description: 'Run a WAF++ PASS IaC compliance scan and push the result to a WAF++ server.'
+author: 'WAF2p'
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  server_url:
+    description: 'Base URL of the WAF++ server (e.g. https://wafpass.example.com).'
+    required: true
+  api_token:
+    description: 'Bearer token for the WAF++ server. Use secrets.WAFPASS_TOKEN.'
+    required: false
+  api_key:
+    description: 'API key for server ingestion. Use secrets.WAFPASS_API_KEY. Either api_token or api_key is required.'
+    required: false
+  scan_path:
+    description: 'Path(s) to scan. Separate multiple paths with spaces (e.g. "./aws ./azure").'
+    required: true
+    default: '.'
+  iac_framework:
+    description: 'IaC framework plugin to use: terraform, bicep, cdk, pulumi.'
+    required: false
+    default: 'terraform'
+  stage:
+    description: 'Deployment stage this run targets, e.g. dev, staging, prod.'
+    required: false
+  project:
+    description: 'Project / repo name. Defaults to github.repository.'
+    required: false
+  branch:
+    description: 'Git branch. Defaults to github.ref_name.'
+    required: false
+  git_sha:
+    description: 'Commit SHA. Defaults to github.sha.'
+    required: false
+  fail_on:
+    description: >
+      Fail the workflow step if the scan contains: fail (any FAIL),
+      skip (any FAIL or SKIP), any (same as skip), high/medium/critical
+      (a finding of at least that severity), or never.
+    required: false
+    default: 'fail'
+  min_severity:
+    description: 'Minimum severity to evaluate: low, medium, high, critical.'
+    required: false
+  controls_dir:
+    description: 'Path to local WAF++ YAML controls directory.'
+    required: false
+  server_controls:
+    description: 'Fetch controls from the WAF++ server instead of using controls_dir.'
+    required: false
+    default: 'false'
+  verbose:
+    description: 'Show all results including PASSes.'
+    required: false
+    default: 'false'
+  plan_file:
+    description: 'Path to a Terraform plan JSON file for change overview analysis.'
+    required: false
+  upload_source:
+    description: 'Upload source file contents so the dashboard can render diff previews.'
+    required: false
+    default: 'false'
+  wafpass_version:
+    description: 'Version of wafpass-core to install (e.g. 1.0.0). Leave empty for latest.'
+    required: false
+  wafpass_source:
+    description: 'Override pip install source, e.g. git+https://github.com/WAF2p/pass.git. Takes precedence over wafpass_version.'
+    required: false
+  python_version:
+    description: 'Python version to set up for the runner.'
+    required: false
+    default: '3.12'
+
+outputs:
+  run_id:
+    description: 'ID of the run created on the WAF++ server.'
+    value: ${{ steps.run.outputs.run_id }}
+  score:
+    description: 'Overall compliance score returned by the server.'
+    value: ${{ steps.run.outputs.score }}
+  findings_count:
+    description: 'Number of findings in the scan result.'
+    value: ${{ steps.run.outputs.findings_count }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - id: run
+      run: python3 "${{ github.action_path }}/run.py"
+      shell: bash
+      env:
+        WAFPASS_PUSH_URL: ${{ inputs.server_url }}
+        WAFPASS_API_TOKEN: ${{ inputs.api_token }}
+        WAFPASS_API_KEY: ${{ inputs.api_key }}
+        WAFPASS_SCAN_PATH: ${{ inputs.scan_path }}
+        WAFPASS_IAC: ${{ inputs.iac_framework }}
+        WAFPASS_STAGE: ${{ inputs.stage }}
+        WAFPASS_PROJECT: ${{ inputs.project }}
+        WAFPASS_BRANCH: ${{ inputs.branch }}
+        WAFPASS_GIT_SHA: ${{ inputs.git_sha }}
+        WAFPASS_FAIL_ON: ${{ inputs.fail_on }}
+        WAFPASS_MIN_SEVERITY: ${{ inputs.min_severity }}
+        WAFPASS_CONTROLS_DIR: ${{ inputs.controls_dir }}
+        WAFPASS_SERVER_CONTROLS: ${{ inputs.server_controls }}
+        WAFPASS_VERBOSE: ${{ inputs.verbose }}
+        WAFPASS_PLAN_FILE: ${{ inputs.plan_file }}
+        WAFPASS_UPLOAD_SOURCE: ${{ inputs.upload_source }}
+        WAFPASS_VERSION: ${{ inputs.wafpass_version }}
+        WAFPASS_SOURCE: ${{ inputs.wafpass_source }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REF_NAME: ${{ github.ref_name }}
+        GITHUB_SHA: ${{ github.sha }}

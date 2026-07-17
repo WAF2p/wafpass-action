@@ -1,0 +1,72 @@
+name: Self-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check action.yml syntax
+        run: |
+          python3 -c "import yaml; yaml.safe_load(open('action.yml'))"
+
+      - name: Lint run.py
+        run: |
+          python3 -m py_compile run.py
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: action
+
+      - name: Checkout WAF++ PASS for controls and fixtures
+        uses: actions/checkout@v4
+        with:
+          repository: WAF2p/pass
+          path: pass
+
+      - name: Start mock WAF++ server
+        run: |
+          cat > /tmp/mock_server.py <<'PY'
+          import json, uuid
+          from http.server import BaseHTTPRequestHandler, HTTPServer
+          class Handler(BaseHTTPRequestHandler):
+              def log_message(self, fmt, *args): pass
+              def do_POST(self):
+                  length = int(self.headers.get('Content-Length', 0))
+                  payload = json.loads(self.rfile.read(length))
+                  run_id = str(uuid.uuid4())
+                  resp = {"data": {"id": run_id, "score": payload.get("score", 0)}}
+                  self.send_response(201)
+                  self.send_header("Content-Type", "application/json")
+                  self.end_headers()
+                  self.wfile.write(json.dumps(resp).encode())
+          HTTPServer(("127.0.0.1", 9999), Handler).serve_forever()
+          PY
+          python3 /tmp/mock_server.py &
+          sleep 2
+
+      - name: Run action against fixture
+        uses: ./action
+        with:
+          server_url: http://localhost:9999
+          api_key: dummy-key-for-smoke-test
+          scan_path: ./pass/tests/fixtures/non_compliant
+          controls_dir: ./pass/controls
+          fail_on: never
+
+      - name: Stop mock server
+        if: always()
+        run: pkill -f /tmp/mock_server.py || true
