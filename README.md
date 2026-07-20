@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run WAF++ PASS
-        uses: WAF2p/wafpass-action@v1
+        uses: WAF2p/wafpass-action@v0.1.0
         with:
           server_url: https://wafpass.example.com
           api_token: ${{ secrets.WAFPASS_TOKEN }}
@@ -47,7 +47,7 @@ jobs:
 
 ```yaml
       - name: Run WAF++ PASS
-        uses: WAF2p/wafpass-action@v1
+        uses: WAF2p/wafpass-action@v0.1.0
         with:
           server_url: https://wafpass.example.com
           api_key: ${{ secrets.WAFPASS_API_KEY }}
@@ -103,7 +103,7 @@ published yet, install from the source repository instead:
 
 ```yaml
       - name: Run WAF++ PASS
-        uses: WAF2p/wafpass-action@v1
+        uses: WAF2p/wafpass-action@v0.1.0
         with:
           server_url: ${{ vars.WAFPASS_SERVER_URL }}
           api_key: ${{ secrets.WAFPASS_API_KEY }}
@@ -115,7 +115,7 @@ published yet, install from the source repository instead:
 
 ```yaml
       - name: Run WAF++ PASS
-        uses: WAF2p/wafpass-action@v1
+        uses: WAF2p/wafpass-action@v0.1.0
         with:
           server_url: ${{ vars.WAFPASS_SERVER_URL }}
           api_key: ${{ secrets.WAFPASS_API_KEY }}
