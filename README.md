@@ -71,6 +71,8 @@ jobs:
 | `min_severity`   | no       | —            | Minimum severity to evaluate: `low`, `medium`, `high`, `critical`. |
 | `controls_dir`   | no       | —            | Path to local WAF++ YAML controls. |
 | `server_controls`| no       | `false`      | Fetch controls from the WAF++ server instead. |
+| `fetch_controls` | no       | `false`      | Clone controls from the framework repo before scanning. |
+| `framework_repo` | no       | `WAF2p/fr..` | Repo to fetch controls from when `fetch_controls` is enabled. |
 | `verbose`        | no       | `false`      | Show all results including PASSes. |
 | `plan_file`      | no       | —            | Path to a Terraform plan JSON for change overview. |
 | `upload_source`  | no       | `false`      | Upload source files for dashboard diff previews. |
