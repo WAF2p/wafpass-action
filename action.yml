@@ -52,6 +52,14 @@ inputs:
     description: 'Fetch controls from the WAF++ server instead of using controls_dir.'
     required: false
     default: 'false'
+  fetch_controls:
+    description: 'Clone the WAF++ controls from the framework repo before scanning. Use when the controls are not already available locally.'
+    required: false
+    default: 'false'
+  framework_repo:
+    description: 'GitHub repo (owner/name) to fetch controls from when fetch_controls is enabled.'
+    required: false
+    default: 'WAF2p/framework'
   verbose:
     description: 'Show all results including PASSes.'
     required: false
@@ -92,6 +100,20 @@ runs:
       with:
         python-version: ${{ inputs.python_version }}
 
+    - name: Fetch WAF++ controls
+      id: fetch-controls
+      if: ${{ inputs.fetch_controls == 'true' }}
+      shell: bash
+      run: |
+        src="${RUNNER_TEMP}/wafpass-framework"
+        dest="${RUNNER_TEMP}/wafpass-controls"
+        rm -rf "$src" "$dest"
+        git clone --depth 1 "https://github.com/${{ inputs.framework_repo }}.git" "$src"
+        mkdir -p "$dest"
+        cp "$src"/modules/controls/controls/*.yml "$dest"/
+        echo "dir=$dest" >> "$GITHUB_OUTPUT"
+        echo "Fetched $(ls "$dest" | wc -l) control file(s) from ${{ inputs.framework_repo }}"
+
     - id: run
       run: python3 "${{ github.action_path }}/run.py"
       shell: bash
@@ -107,7 +129,7 @@ runs:
         WAFPASS_GIT_SHA: ${{ inputs.git_sha }}
         WAFPASS_FAIL_ON: ${{ inputs.fail_on }}
         WAFPASS_MIN_SEVERITY: ${{ inputs.min_severity }}
-        WAFPASS_CONTROLS_DIR: ${{ inputs.controls_dir }}
+        WAFPASS_CONTROLS_DIR: ${{ inputs.controls_dir || steps.fetch-controls.outputs.dir }}
         WAFPASS_SERVER_CONTROLS: ${{ inputs.server_controls }}
         WAFPASS_VERBOSE: ${{ inputs.verbose }}
         WAFPASS_PLAN_FILE: ${{ inputs.plan_file }}
