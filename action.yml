@@ -7,7 +7,7 @@ branding:
 
 inputs:
   server_url:
-    description: 'Base URL of the WAF++ server (e.g. https://wafpass.example.com).'
+    description: 'Base URL of the WAF++ server. The action posts to /api/v1/runs (e.g. https://wafpass.example.com).'
     required: true
   api_token:
     description: 'Bearer token for the WAF++ server. Use secrets.WAFPASS_TOKEN.'

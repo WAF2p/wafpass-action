@@ -1,13 +1,13 @@
 # WAF++ PASS GitHub Action
 
 Run [WAF++ PASS](https://waf2p.dev) scans in GitHub Actions and push the results
-to your WAF++ server `/runs` endpoint.
+to your WAF++ server `/api/v1/runs` endpoint.
 
 ## Features
 
 - Installs the `wafpass` CLI automatically (unless already present).
 - Scans Terraform, Bicep, CDK, or Pulumi IaC files.
-- Pushes the full `wafpass-result.json` payload to `POST /runs`.
+- Pushes the full `wafpass-result.json` payload to `POST /api/v1/runs`.
 - Supports both **Bearer token** and **API key** authentication.
 - Fails the workflow step based on configurable policies (`fail_on`).
 - Automatically marks runs as CI/CD (`run: { is_cicd: true }`) and sets `triggered_by: github-actions`.
@@ -53,6 +53,8 @@ jobs:
           api_key: ${{ secrets.WAFPASS_API_KEY }}
           scan_path: ./infra
 ```
+
+> **BREAKING CHANGE:** This action now pushes to the versioned server endpoint `/api/v1/runs`. Update `server_url` to the base URL of a server that serves `/api/v1/*` (e.g. `https://wafpass.example.com`).
 
 ## Inputs
 
