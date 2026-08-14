@@ -2,7 +2,7 @@
 """GitHub Action runner for WAF++ PASS.
 
 Installs the wafpass CLI if needed, runs the scan, pushes the JSON result to the
-WAF++ server /runs endpoint, and fails the step according to the configured policy.
+WAF++ server /api/v1/runs endpoint, and fails the step according to the configured policy.
 """
 from __future__ import annotations
 
@@ -140,7 +140,7 @@ def _push_result(payload: dict) -> dict:
     import httpx
 
     push_url = _env("WAFPASS_PUSH_URL").rstrip("/")
-    url = f"{push_url}/runs"
+    url = f"{push_url}/api/v1/runs"
 
     token = _env("WAFPASS_API_TOKEN")
     api_key = _env("WAFPASS_API_KEY")
