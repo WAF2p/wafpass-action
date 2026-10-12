@@ -63,6 +63,7 @@ jobs:
 | `server_url`     | yes      | —            | Base URL of the WAF++ server. |
 | `api_token`      | no       | —            | Bearer token. Provide either this or `api_key`. |
 | `api_key`        | no       | —            | Ingest API key (`X-Api-Key`). |
+| `mandant`        | no       | —            | Optional mandate UUID for multi-mandant instances (sent as `X-Mandant-Context`). |
 | `scan_path`      | yes      | `.`          | Path(s) to scan. Separate multiple paths with spaces. |
 | `iac_framework`  | no       | `terraform`  | IaC plugin: `terraform`, `bicep`, `cdk`, `pulumi`. |
 | `stage`          | no       | —            | Deployment stage, e.g. `dev`, `staging`, `prod`. |
