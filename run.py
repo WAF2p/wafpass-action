@@ -154,6 +154,10 @@ def _push_result(payload: dict) -> dict:
         print("ERROR: Either api_token or api_key must be provided", file=sys.stderr)
         sys.exit(2)
 
+    mandant = _env("WAFPASS_MANDANT") or _env("INPUT_MANDANT")
+    if mandant:
+        headers["X-Mandant-Context"] = mandant
+
     print(f"Pushing result to {url}...", file=sys.stderr)
     resp = httpx.post(url, json=payload, headers=headers, timeout=120)
     print(f"Server responded: HTTP {resp.status_code}", file=sys.stderr)

@@ -15,6 +15,9 @@ inputs:
   api_key:
     description: 'API key for server ingestion. Use secrets.WAFPASS_API_KEY. Either api_token or api_key is required.'
     required: false
+  mandant:
+    description: 'Optional mandate UUID for multi-mandant instances. Sent as X-Mandant-Context. Only needed when using api_token with a holding/group admin token; api_key ingest is already mandate-scoped.'
+    required: false
   scan_path:
     description: 'Path(s) to scan. Separate multiple paths with spaces (e.g. "./aws ./azure").'
     required: true
@@ -121,6 +124,7 @@ runs:
         WAFPASS_PUSH_URL: ${{ inputs.server_url }}
         WAFPASS_API_TOKEN: ${{ inputs.api_token }}
         WAFPASS_API_KEY: ${{ inputs.api_key }}
+        WAFPASS_MANDANT: ${{ inputs.mandant }}
         WAFPASS_SCAN_PATH: ${{ inputs.scan_path }}
         WAFPASS_IAC: ${{ inputs.iac_framework }}
         WAFPASS_STAGE: ${{ inputs.stage }}
