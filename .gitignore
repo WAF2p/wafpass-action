@@ -5,5 +5,5 @@ __pycache__/
 .venv/
 env/
 venv/
-wafpass-result.json
+wombat-result.json
 .DS_Store

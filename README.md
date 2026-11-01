@@ -1,13 +1,13 @@
-# WAF++ PASS GitHub Action
+# WOMBATpass GitHub Action
 
-Run [WAF++ PASS](https://waf2p.dev) scans in GitHub Actions and push the results
-to your WAF++ server `/api/v1/runs` endpoint.
+Run [WOMBATpass](https://www.wombat-gov.dev) scans in GitHub Actions and push the results
+to your Wombat server `/api/v1/runs` endpoint.
 
 ## Features
 
-- Installs the `wafpass` CLI automatically (unless already present).
+- Installs the `wombat` CLI automatically (unless already present).
 - Scans Terraform, Bicep, CDK, or Pulumi IaC files.
-- Pushes the full `wafpass-result.json` payload to `POST /api/v1/runs`.
+- Pushes the full `wombat-result.json` payload to `POST /api/v1/runs`.
 - Supports both **Bearer token** and **API key** authentication.
 - Fails the workflow step based on configurable policies (`fail_on`).
 - Automatically marks runs as CI/CD (`run: { is_cicd: true }`) and sets `triggered_by: github-actions`.
@@ -18,7 +18,7 @@ to your WAF++ server `/api/v1/runs` endpoint.
 Add the action to a workflow after checking out your repository:
 
 ```yaml
-name: WAF++ PASS Scan
+name: WOMBATpass Scan
 
 on:
   push:
@@ -26,16 +26,16 @@ on:
   pull_request:
 
 jobs:
-  wafpass:
+  wombat:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run WAF++ PASS
+      - name: Run WOMBATpass
         uses: WAF2p/wafpass-action@v0.1.1
         with:
-          server_url: https://wafpass.example.com
-          api_token: ${{ secrets.WAFPASS_TOKEN }}
+          server_url: https://wombat.example.com
+          api_token: ${{ secrets.WOMBAT_TOKEN }}
           scan_path: ./infra
           iac_framework: terraform
           project: my-service
@@ -46,21 +46,21 @@ jobs:
 ### Authenticate with an API key
 
 ```yaml
-      - name: Run WAF++ PASS
+      - name: Run WOMBATpass
         uses: WAF2p/wafpass-action@v0.1.1
         with:
-          server_url: https://wafpass.example.com
-          api_key: ${{ secrets.WAFPASS_API_KEY }}
+          server_url: https://wombat.example.com
+          api_key: ${{ secrets.WOMBAT_API_KEY }}
           scan_path: ./infra
 ```
 
-> **BREAKING CHANGE:** This action now pushes to the versioned server endpoint `/api/v1/runs`. Update `server_url` to the base URL of a server that serves `/api/v1/*` (e.g. `https://wafpass.example.com`).
+> **BREAKING CHANGE:** This action now pushes to the versioned server endpoint `/api/v1/runs`. Update `server_url` to the base URL of a server that serves `/api/v1/*` (e.g. `https://wombat.example.com`).
 
 ## Inputs
 
 | Input            | Required | Default      | Description |
 |------------------|----------|--------------|-------------|
-| `server_url`     | yes      | —            | Base URL of the WAF++ server. |
+| `server_url`     | yes      | —            | Base URL of the Wombat server. |
 | `api_token`      | no       | —            | Bearer token. Provide either this or `api_key`. |
 | `api_key`        | no       | —            | Ingest API key (`X-Api-Key`). |
 | `scan_path`      | yes      | `.`          | Path(s) to scan. Separate multiple paths with spaces. |
@@ -71,22 +71,22 @@ jobs:
 | `git_sha`        | no       | current SHA  | Commit SHA. |
 | `fail_on`        | no       | `fail`       | `fail`, `skip`, `any`, `low`, `medium`, `high`, `critical`, `never`. |
 | `min_severity`   | no       | —            | Minimum severity to evaluate: `low`, `medium`, `high`, `critical`. |
-| `controls_dir`   | no       | —            | Path to local WAF++ YAML controls. |
-| `server_controls`| no       | `false`      | Fetch controls from the WAF++ server instead. |
+| `controls_dir`   | no       | —            | Path to local Wombat YAML controls. |
+| `server_controls`| no       | `false`      | Fetch controls from the Wombat server instead. |
 | `fetch_controls` | no       | `false`      | Clone controls from the framework repo before scanning. |
 | `framework_repo` | no       | `WAF2p/fr..` | Repo to fetch controls from when `fetch_controls` is enabled. |
 | `verbose`        | no       | `false`      | Show all results including PASSes. |
 | `plan_file`      | no       | —            | Path to a Terraform plan JSON for change overview. |
 | `upload_source`  | no       | `false`      | Upload source files for dashboard diff previews. |
-| `wafpass_version`| no       | —            | `wafpass-core` version to install. |
-| `wafpass_source` | no       | —            | Override pip source, e.g. `git+https://github.com/WAF2p/pass.git`. |
+| `wombat_version`| no       | —            | `wombat-core` version to install. |
+| `wombat_source` | no       | —            | Override pip source, e.g. `git+https://github.com/WAF2p/pass.git`. |
 | `python_version` | no       | `3.12`       | Python version for the runner. |
 
 ## Outputs
 
 | Output           | Description |
 |------------------|-------------|
-| `run_id`         | UUID of the created run on the WAF++ server. |
+| `run_id`         | UUID of the created run on the Wombat server. |
 | `score`          | Overall compliance score returned by the server. |
 | `findings_count` | Number of findings in the scan result. |
 
@@ -102,27 +102,27 @@ has already been pushed to the server:
 
 ## Installing the CLI
 
-By default the action installs `wafpass-core` from PyPI. If your package is not
+By default the action installs `wombat-core` from PyPI. If your package is not
 published yet, install from the source repository instead:
 
 ```yaml
-      - name: Run WAF++ PASS
+      - name: Run WOMBATpass
         uses: WAF2p/wafpass-action@v0.1.1
         with:
-          server_url: ${{ vars.WAFPASS_SERVER_URL }}
-          api_key: ${{ secrets.WAFPASS_API_KEY }}
+          server_url: ${{ vars.WOMBAT_SERVER_URL }}
+          api_key: ${{ secrets.WOMBAT_API_KEY }}
           scan_path: ./infra
-          wafpass_source: git+https://github.com/WAF2p/pass.git
+          wombat_source: git+https://github.com/WAF2p/pass.git
 ```
 
 ## Multi-cloud / monorepo example
 
 ```yaml
-      - name: Run WAF++ PASS
+      - name: Run WOMBATpass
         uses: WAF2p/wafpass-action@v0.1.1
         with:
-          server_url: ${{ vars.WAFPASS_SERVER_URL }}
-          api_key: ${{ secrets.WAFPASS_API_KEY }}
+          server_url: ${{ vars.WOMBAT_SERVER_URL }}
+          api_key: ${{ secrets.WOMBAT_API_KEY }}
           scan_path: ./aws ./azure ./gcp
           iac_framework: terraform
           project: ${{ github.repository }}

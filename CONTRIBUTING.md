@@ -1,6 +1,6 @@
-# Contributing to WAF++ PASS GitHub Action
+# Contributing to WOMBATpass GitHub Action
 
-Thank you for your interest in improving the WAF++ PASS GitHub Action.
+Thank you for your interest in improving the WOMBATpass GitHub Action.
 
 ## How to contribute
 

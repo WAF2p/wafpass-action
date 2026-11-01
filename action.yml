@@ -1,5 +1,5 @@
-name: 'WAF++ PASS Scan'
-description: 'Run a WAF++ PASS IaC compliance scan and push the result to a WAF++ server.'
+name: 'WOMBATpass Scan'
+description: 'Run a WOMBATpass IaC compliance scan and push the result to a Wombat server.'
 author: 'WAF2p'
 branding:
   icon: shield
@@ -7,13 +7,13 @@ branding:
 
 inputs:
   server_url:
-    description: 'Base URL of the WAF++ server. The action posts to /api/v1/runs (e.g. https://wafpass.example.com).'
+    description: 'Base URL of the Wombat server. The action posts to /api/v1/runs (e.g. https://wombat.example.com).'
     required: true
   api_token:
-    description: 'Bearer token for the WAF++ server. Use secrets.WAFPASS_TOKEN.'
+    description: 'Bearer token for the Wombat server. Use secrets.WOMBAT_TOKEN.'
     required: false
   api_key:
-    description: 'API key for server ingestion. Use secrets.WAFPASS_API_KEY. Either api_token or api_key is required.'
+    description: 'API key for server ingestion. Use secrets.WOMBAT_API_KEY. Either api_token or api_key is required.'
     required: false
   scan_path:
     description: 'Path(s) to scan. Separate multiple paths with spaces (e.g. "./aws ./azure").'
@@ -46,14 +46,14 @@ inputs:
     description: 'Minimum severity to evaluate: low, medium, high, critical.'
     required: false
   controls_dir:
-    description: 'Path to local WAF++ YAML controls directory.'
+    description: 'Path to local Wombat YAML controls directory.'
     required: false
   server_controls:
-    description: 'Fetch controls from the WAF++ server instead of using controls_dir.'
+    description: 'Fetch controls from the Wombat server instead of using controls_dir.'
     required: false
     default: 'false'
   fetch_controls:
-    description: 'Clone the WAF++ controls from the framework repo before scanning. Use when the controls are not already available locally.'
+    description: 'Clone the Wombat controls from the framework repo before scanning. Use when the controls are not already available locally.'
     required: false
     default: 'false'
   framework_repo:
@@ -71,11 +71,17 @@ inputs:
     description: 'Upload source file contents so the dashboard can render diff previews.'
     required: false
     default: 'false'
+  wombat_version:
+    description: 'Version of wombat-core to install (e.g. 1.0.0). Leave empty for latest.'
+    required: false
+  wombat_source:
+    description: 'Override pip install source, e.g. git+https://github.com/WAF2p/pass.git. Takes precedence over wombat_version.'
+    required: false
   wafpass_version:
-    description: 'Version of wafpass-core to install (e.g. 1.0.0). Leave empty for latest.'
+    description: 'Deprecated alias for wombat_version. Use wombat_version instead.'
     required: false
   wafpass_source:
-    description: 'Override pip install source, e.g. git+https://github.com/WAF2p/pass.git. Takes precedence over wafpass_version.'
+    description: 'Deprecated alias for wombat_source. Use wombat_source instead.'
     required: false
   python_version:
     description: 'Python version to set up for the runner.'
@@ -84,7 +90,7 @@ inputs:
 
 outputs:
   run_id:
-    description: 'ID of the run created on the WAF++ server.'
+    description: 'ID of the run created on the Wombat server.'
     value: ${{ steps.run.outputs.run_id }}
   score:
     description: 'Overall compliance score returned by the server.'
@@ -100,13 +106,13 @@ runs:
       with:
         python-version: ${{ inputs.python_version }}
 
-    - name: Fetch WAF++ controls
+    - name: Fetch Wombat controls
       id: fetch-controls
       if: ${{ inputs.fetch_controls == 'true' }}
       shell: bash
       run: |
-        src="${RUNNER_TEMP}/wafpass-framework"
-        dest="${RUNNER_TEMP}/wafpass-controls"
+        src="${RUNNER_TEMP}/wombat-framework"
+        dest="${RUNNER_TEMP}/wombat-controls"
         rm -rf "$src" "$dest"
         git clone --depth 1 "https://github.com/${{ inputs.framework_repo }}.git" "$src"
         mkdir -p "$dest"
@@ -118,24 +124,24 @@ runs:
       run: python3 "${{ github.action_path }}/run.py"
       shell: bash
       env:
-        WAFPASS_PUSH_URL: ${{ inputs.server_url }}
-        WAFPASS_API_TOKEN: ${{ inputs.api_token }}
-        WAFPASS_API_KEY: ${{ inputs.api_key }}
-        WAFPASS_SCAN_PATH: ${{ inputs.scan_path }}
-        WAFPASS_IAC: ${{ inputs.iac_framework }}
-        WAFPASS_STAGE: ${{ inputs.stage }}
-        WAFPASS_PROJECT: ${{ inputs.project }}
-        WAFPASS_BRANCH: ${{ inputs.branch }}
-        WAFPASS_GIT_SHA: ${{ inputs.git_sha }}
-        WAFPASS_FAIL_ON: ${{ inputs.fail_on }}
-        WAFPASS_MIN_SEVERITY: ${{ inputs.min_severity }}
-        WAFPASS_CONTROLS_DIR: ${{ inputs.controls_dir || steps.fetch-controls.outputs.dir }}
-        WAFPASS_SERVER_CONTROLS: ${{ inputs.server_controls }}
-        WAFPASS_VERBOSE: ${{ inputs.verbose }}
-        WAFPASS_PLAN_FILE: ${{ inputs.plan_file }}
-        WAFPASS_UPLOAD_SOURCE: ${{ inputs.upload_source }}
-        WAFPASS_VERSION: ${{ inputs.wafpass_version }}
-        WAFPASS_SOURCE: ${{ inputs.wafpass_source }}
+        WOMBAT_PUSH_URL: ${{ inputs.server_url }}
+        WOMBAT_API_TOKEN: ${{ inputs.api_token }}
+        WOMBAT_API_KEY: ${{ inputs.api_key }}
+        WOMBAT_SCAN_PATH: ${{ inputs.scan_path }}
+        WOMBAT_IAC: ${{ inputs.iac_framework }}
+        WOMBAT_STAGE: ${{ inputs.stage }}
+        WOMBAT_PROJECT: ${{ inputs.project }}
+        WOMBAT_BRANCH: ${{ inputs.branch }}
+        WOMBAT_GIT_SHA: ${{ inputs.git_sha }}
+        WOMBAT_FAIL_ON: ${{ inputs.fail_on }}
+        WOMBAT_MIN_SEVERITY: ${{ inputs.min_severity }}
+        WOMBAT_CONTROLS_DIR: ${{ inputs.controls_dir || steps.fetch-controls.outputs.dir }}
+        WOMBAT_SERVER_CONTROLS: ${{ inputs.server_controls }}
+        WOMBAT_VERBOSE: ${{ inputs.verbose }}
+        WOMBAT_PLAN_FILE: ${{ inputs.plan_file }}
+        WOMBAT_UPLOAD_SOURCE: ${{ inputs.upload_source }}
+        WOMBAT_VERSION: ${{ inputs.wombat_version || inputs.wafpass_version }}
+        WOMBAT_SOURCE: ${{ inputs.wombat_source || inputs.wafpass_source }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_REF_NAME: ${{ github.ref_name }}
         GITHUB_SHA: ${{ github.sha }}

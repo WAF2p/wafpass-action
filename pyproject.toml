@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "wafpass-action"
+name = "wombat-action"
 version = "0.1.1"
-description = "WAF++ PASS – GitHub Action for running IaC compliance scans and pushing results to a WAF++ server"
+description = "WOMBATpass – GitHub Action for running IaC compliance scans and pushing results to a Wombat server"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
@@ -16,7 +16,7 @@ authors = [
     { name = "Tim Urlaub" },
 ]
 keywords = [
-    "waf++", "github-action", "iac", "terraform", "compliance", "security", "cloud",
+    "wombat", "github-action", "iac", "terraform", "compliance", "security", "cloud",
     "devsecops", "static-analysis", "governance", "multi-cloud",
 ]
 classifiers = [
@@ -36,8 +36,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://waf2p.dev"
-Documentation = "https://waf2p.dev/docs/"
+Homepage = "https://www.wombat-gov.dev"
+Documentation = "https://www.wombat-gov.dev/docs/"
 Repository = "https://github.com/WAF2p/wafpass-action"
 "Bug Tracker" = "https://github.com/WAF2p/wafpass-action/issues"
 Community = "https://github.com/WAF2p"

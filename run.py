@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""GitHub Action runner for WAF++ PASS.
+"""GitHub Action runner for WOMBATpass.
 
-Installs the wafpass CLI if needed, runs the scan, pushes the JSON result to the
-WAF++ server /api/v1/runs endpoint, and fails the step according to the configured policy.
+Installs the wombat CLI if needed, runs the scan, pushes the JSON result to the
+Wombat server /api/v1/runs endpoint, and fails the step according to the configured policy.
 """
 from __future__ import annotations
 
@@ -15,7 +15,17 @@ from pathlib import Path
 
 
 def _env(name: str, default: str = "") -> str:
-    return os.environ.get(name, default).strip()
+    """Read a WOMBAT_* setting, falling back to the deprecated WAFPASS_* name."""
+    value = os.environ.get(name)
+    if value is None and name.startswith("WOMBAT_"):
+        legacy = "WAFPASS_" + name[len("WOMBAT_"):]
+        value = os.environ.get(legacy)
+        if value is not None:
+            print(
+                f"WARNING: {legacy} is deprecated; use {name} instead.",
+                file=sys.stderr,
+            )
+    return (value if value is not None else default).strip()
 
 
 def _split_paths(raw: str) -> list[str]:
@@ -29,57 +39,86 @@ def _split_paths(raw: str) -> list[str]:
     return shlex.split(raw)
 
 
-def _ensure_wafpass() -> str:
-    """Return the absolute path to the wafpass executable, installing if needed."""
+def _ensure_wombat() -> str:
+    """Return the absolute path to the wombat executable, installing if needed.
+
+    Falls back to a pre-installed legacy ``wafpass`` binary during the rebrand
+    migration window.
+    """
     try:
-        return subprocess.check_output(["which", "wafpass"], text=True).strip()
+        return subprocess.check_output(["which", "wombat"], text=True).strip()
     except subprocess.CalledProcessError:
         pass
 
-    source = _env("WAFPASS_SOURCE")
-    version = _env("WAFPASS_VERSION")
+    try:
+        legacy = subprocess.check_output(["which", "wafpass"], text=True).strip()
+        print(
+            "WARNING: the 'wafpass' command is deprecated; install 'wombat-core' instead.",
+            file=sys.stderr,
+        )
+        return legacy
+    except subprocess.CalledProcessError:
+        pass
+
+    source = _env("WOMBAT_SOURCE")
+    version = _env("WOMBAT_VERSION")
 
     if source:
         package = source
     else:
-        package = "wafpass-core"
+        package = "wombat-core"
         if version:
             package = f"{package}=={version}"
 
     print(f"Installing {package}...", file=sys.stderr)
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+    except subprocess.CalledProcessError:
+        # Migration fallback: the new package may not be published yet.
+        legacy_package = "wafpass-core"
+        if version:
+            legacy_package = f"{legacy_package}=={version}"
+        print(
+            f"WARNING: {package} could not be installed; falling back to "
+            f"deprecated {legacy_package}.",
+            file=sys.stderr,
+        )
+        subprocess.check_call([sys.executable, "-m", "pip", "install", legacy_package])
 
-    return subprocess.check_output(["which", "wafpass"], text=True).strip()
+    try:
+        return subprocess.check_output(["which", "wombat"], text=True).strip()
+    except subprocess.CalledProcessError:
+        return subprocess.check_output(["which", "wafpass"], text=True).strip()
 
 
 def _build_args() -> list[str]:
-    args: list[str] = ["--output", "json", "--iac", _env("WAFPASS_IAC", "terraform").lower()]
+    args: list[str] = ["--output", "json", "--iac", _env("WOMBAT_IAC", "terraform").lower()]
 
-    project = _env("WAFPASS_PROJECT") or _env("GITHUB_REPOSITORY")
+    project = _env("WOMBAT_PROJECT") or _env("GITHUB_REPOSITORY")
     if project:
         args.extend(["--project", project])
 
-    branch = _env("WAFPASS_BRANCH") or _env("GITHUB_REF_NAME")
+    branch = _env("WOMBAT_BRANCH") or _env("GITHUB_REF_NAME")
     if branch:
         args.extend(["--branch", branch])
 
-    git_sha = _env("WAFPASS_GIT_SHA") or _env("GITHUB_SHA")
+    git_sha = _env("WOMBAT_GIT_SHA") or _env("GITHUB_SHA")
     if git_sha:
         args.extend(["--git-sha", git_sha])
 
     args.extend(["--triggered-by", "github-actions", "--is-cicd"])
 
-    stage = _env("WAFPASS_STAGE")
+    stage = _env("WOMBAT_STAGE")
     if stage:
         args.extend(["--stage", stage])
 
-    severity = _env("WAFPASS_MIN_SEVERITY")
+    severity = _env("WOMBAT_MIN_SEVERITY")
     if severity:
         args.extend(["--severity", severity])
 
-    push_url = _env("WAFPASS_PUSH_URL")
-    server_controls = _env("WAFPASS_SERVER_CONTROLS", "false").lower() == "true"
-    controls_dir = _env("WAFPASS_CONTROLS_DIR")
+    push_url = _env("WOMBAT_PUSH_URL")
+    server_controls = _env("WOMBAT_SERVER_CONTROLS", "false").lower() == "true"
+    controls_dir = _env("WOMBAT_CONTROLS_DIR")
 
     if server_controls:
         if not push_url:
@@ -89,22 +128,22 @@ def _build_args() -> list[str]:
     elif controls_dir:
         args.extend(["--controls-dir", controls_dir])
 
-    if _env("WAFPASS_VERBOSE", "false").lower() == "true":
+    if _env("WOMBAT_VERBOSE", "false").lower() == "true":
         args.append("--verbose")
 
-    plan_file = _env("WAFPASS_PLAN_FILE")
+    plan_file = _env("WOMBAT_PLAN_FILE")
     if plan_file:
         args.extend(["--plan-file", plan_file])
 
-    if _env("WAFPASS_UPLOAD_SOURCE", "false").lower() == "true":
+    if _env("WOMBAT_UPLOAD_SOURCE", "false").lower() == "true":
         args.append("--upload-source")
 
     return args
 
 
-def _run_scan(wafpass: str) -> dict:
-    paths = _split_paths(_env("WAFPASS_SCAN_PATH", "."))
-    cmd = [wafpass, "check", *paths, *_build_args()]
+def _run_scan(wombat: str) -> dict:
+    paths = _split_paths(_env("WOMBAT_SCAN_PATH", "."))
+    cmd = [wombat, "check", *paths, *_build_args()]
 
     print(f"Running: {' '.join(cmd)}", file=sys.stderr)
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -124,7 +163,7 @@ def _run_scan(wafpass: str) -> dict:
     # The CLI may emit log lines before/after the JSON object; search for it.
     start = output.find("{")
     if start == -1:
-        print("ERROR: No JSON result found in wafpass output", file=sys.stderr)
+        print("ERROR: No JSON result found in wombat output", file=sys.stderr)
         print(output, file=sys.stderr)
         sys.exit(2)
 
@@ -139,11 +178,11 @@ def _run_scan(wafpass: str) -> dict:
 def _push_result(payload: dict) -> dict:
     import httpx
 
-    push_url = _env("WAFPASS_PUSH_URL").rstrip("/")
+    push_url = _env("WOMBAT_PUSH_URL").rstrip("/")
     url = f"{push_url}/api/v1/runs"
 
-    token = _env("WAFPASS_API_TOKEN")
-    api_key = _env("WAFPASS_API_KEY")
+    token = _env("WOMBAT_API_TOKEN")
+    api_key = _env("WOMBAT_API_KEY")
 
     headers = {"Content-Type": "application/json"}
     if api_key:
@@ -181,7 +220,7 @@ def _severity_rank(severity: str) -> int:
 
 
 def _apply_fail_on(payload: dict) -> None:
-    fail_on = _env("WAFPASS_FAIL_ON", "fail").lower()
+    fail_on = _env("WOMBAT_FAIL_ON", "fail").lower()
     if fail_on == "never":
         return
 
@@ -210,8 +249,8 @@ def _apply_fail_on(payload: dict) -> None:
 
 
 def main() -> None:
-    wafpass = _ensure_wafpass()
-    payload = _run_scan(wafpass)
+    wombat = _ensure_wombat()
+    payload = _run_scan(wombat)
     response = _push_result(payload)
 
     data = response.get("data", {})
